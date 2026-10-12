@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloomwell | Digital Well-being</title>
+  <meta name="description" content="Track your digital habits, typing patterns, daily activities and well-being with Bloomwell.">
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="app">
+
+    <aside class="sidebar">
+      <a href="#" class="brand" data-page="dashboard">
+        <span class="brand-icon">✿</span>
+        <span>Bloomwell</span>
+      </a>
+
+      <p class="nav-label">YOUR SPACE</p>
+      <nav class="navigation">
+        <button class="nav-link active" data-page="dashboard">⌂ Dashboard</button>
+        <button class="nav-link" data-page="activity">♡ Daily Activity</button>
+        <button class="nav-link" data-page="typing">⌨ Typing Lab</button>
+        <button class="nav-link" data-page="speech">♫ Speech Lab</button>
+        <button class="nav-link" data-page="insights">✧ AI Insights</button>
+        <button class="nav-link" data-page="progress">↗ My Progress</button>
+      </nav>
+
+      <div class="sidebar-note">
+        <span>🌱</span>
+        <p>Small steps count.<br>Take care of yourself.</p>
+      </div>
+
+      <button id="logoutBtn" class="logout-btn">↪ Log out</button>
+    </aside>
+
+    <main class="main-content">
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">YOUR PERSONAL WELL-BEING SPACE</p>
+          <h1 id="pageTitle">Your little corner of calm 🌷</h1>
+          <p id="pageSubtitle">Understand your habits, one day at a time.</p>
+        </div>
+        <div class="profile">
+          <span class="profile-flower">🌼</span>
+          <span id="profileName">Your space</span>
+        </div>
+      </header>
+
+      <!-- LOGIN -->
+      <section id="authPage" class="page">
+        <div class="auth-card">
+          <span class="big-flower">🌸</span>
+          <p class="eyebrow">A FRESH LITTLE START</p>
+          <h2 id="authTitle">Welcome to Bloomwell</h2>
+          <p class="muted">Your digital habits, your pace, your progress.</p>
+
+          <form id="authForm">
+            <label for="authName">Your name</label>
+            <input id="authName" type="text" placeholder="What should we call you?" required>
+
+            <label for="authEmail">Email</label>
+            <input id="authEmail" type="email" placeholder="you@example.com" required>
+
+            <label for="authPassword">Password</label>
+            <input id="authPassword" type="password" placeholder="Demo only — don't use a real password" required>
+
+            <button type="submit" class="primary-btn" id="authSubmit">Enter my space ✨</button>
+          </form>
+
+          <p class="auth-switch">
+            <span id="authSwitchText">Already visited?</span>
+            <button type="button" id="authSwitch">Switch to login</button>
+          </p>
+          <p class="tiny-note">Prototype only: your details are not sent to a server.</p>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="dashboardPage" class="page">
+        <div class="welcome-banner">
+          <div>
+            <p class="eyebrow">A GENTLE REMINDER</p>
+            <h2>Progress, not perfection. ☁️</h2>
+            <p>Notice your patterns without judging yourself.</p>
+          </div>
+          <span class="banner-art">🌷</span>
+        </div>
+
+        <div class="section-heading">
+          <div>
+            <h2>Your daily snapshot</h2>
+            <p class="muted">Example values — replace them with your own entries.</p>
+          </div>
+          <span class="date-chip" id="todayDate"></span>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card lilac">
+            <span class="stat-icon">📱</span>
+            <p>Screen time</p>
+            <h3 id="dashScreen">5h 20m</h3>
+            <span>Daily digital activity</span>
+          </article>
+          <article class="stat-card peach">
+            <span class="stat-icon">🌙</span>
+            <p>Sleep</p>
+            <h3 id="dashSleep">7h 30m</h3>
+            <span>Rest matters, too</span>
+          </article>
+          <article class="stat-card mint">
+            <span class="stat-icon">⌨️</span>
+            <p>Typing speed</p>
+            <h3 id="dashWpm">0 WPM</h3>
+            <span>Your latest test</span>
+          </article>
+          <article class="stat-card pink">
+            <span class="stat-icon">♡</span>
+            <p>Mood check-in</p>
+            <h3 id="dashMood">Not checked</h3>
+            <span>How are you feeling?</span>
+          </article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>How are you feeling?</h2>
+                <p class="muted">No right or wrong answer.</p>
+              </div>
+              <span>💗</span>
+            </div>
+            <div class="mood-options">
+              <button class="mood-btn" data-mood="Happy">😊<span>Happy</span></button>
+              <button class="mood-btn" data-mood="Okay">😌<span>Okay</span></button>
+              <button class="mood-btn" data-mood="Tired">😴<span>Tired</span></button>
+              <button class="mood-btn" data-mood="Stressed">🥹<span>Stressed</span></button>
+              <button class="mood-btn" data-mood="Low">🌧️<span>Low</span></button>
+            </div>
+            <p id="moodMessage" class="feedback" aria-live="polite">Your feelings deserve space.</p>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Today's little wins</h2>
+                <p class="muted">Choose what you've done.</p>
+              </div>
+              <span>🌱</span>
+            </div>
+            <div class="checklist">
+              <label><input type="checkbox"> Took a screen break</label>
+              <label><input type="checkbox"> Drank enough water</label>
+              <label><input type="checkbox"> Took a movement break</label>
+              <label><input type="checkbox"> Made time to relax</label>
+            </div>
+          </article>
+        </div>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Screen time overview</h2>
+              <p class="muted">Illustrative weekly data — not automatically collected.</p>
+            </div>
+            <span>📊</span>
+          </div>
+          <div class="chart" aria-label="Example weekly screen time chart">
+            <div class="chart-column"><div style="height:48%"></div><span>Mon</span></div>
+            <div class="chart-column"><div style="height:70%"></div><span>Tue</span></div>
+            <div class="chart-column"><div style="height:55%"></div><span>Wed</span></div>
+            <div class="chart-column"><div style="height:84%"></div><span>Thu</span></div>
+            <div class="chart-column"><div style="height:62%"></div><span>Fri</span></div>
+            <div class="chart-column"><div style="height:40%"></div><span>Sat</span></div>
+            <div class="chart-column"><div style="height:32%"></div><span>Sun</span></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- DAILY ACTIVITY -->
+      <section id="activityPage" class="page hidden">
+        <div class="page-intro">
+          <span>🌿</span>
+          <h2>Your day, your patterns</h2>
+          <p>Record your habits manually. There is no automatic phone monitoring.</p>
+        </div>
+
+        <article class="panel form-panel">
+          <h2>Daily activity entry</h2>
+          <form id="activityForm">
+            <div class="form-grid">
+              <div>
+                <label for="activityDate">Date</label>
+                <input id="activityDate" type="date" required>
+              </div>
+              <div>
+                <label for="screenHours">Screen time (hours)</label>
+                <input id="screenHours" type="number" min="0" max="24" step="0.25" placeholder="e.g. 5.5" required>
+              </div>
+              <div>
+                <label for="sleepHours">Sleep (hours)</label>
+                <input id="sleepHours" type="number" min="0" max="24" step="0.25" placeholder="e.g. 7.5" required>
+              </div>
+              <div>
+                <label for="socialHours">Social media (hours)</label>
+                <input id="socialHours" type="number" min="0" max="24" step="0.25" placeholder="e.g. 2" required>
+              </div>
+              <div class="full-width">
+                <label for="activityNotes">Notes about your day</label>
+                <textarea id="activityNotes" rows="4" maxlength="500" placeholder="Anything you'd like to remember about today..."></textarea>
+              </div>
+            </div>
+            <button class="primary-btn" type="submit">Save today's entry ♡</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Your activity history</h2>
+            <span>🗓️</span>
+          </div>
+          <div id="activityHistory" class="history-list">
+            <p class="muted">Your saved entries will appear here.</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- TYPING LAB -->
+      <section id="typingPage" class="page hidden">
+        <div class="page-intro">
+          <span>⌨️</span>
+          <h2>The Typing Lab</h2>
+          <p>Explore typing speed and accuracy using a short practice test.</p>
+        </div>
+
+        <article class="panel typing-panel">
+          <div class="typing-stats">
+            <div><span>Time left</span><strong id="typingTimer">60s</strong></div>
+            <div><span>Words per minute</span><strong id="typingWpm">0</strong></div>
+            <div><span>Accuracy</span><strong id="typingAccuracy">100%</strong></div>
+          </div>
+
+          <div id="typingPrompt" class="typing-prompt">
+            Small steps can make a meaningful difference. Take a moment to pause, notice your habits, and choose one gentle change that supports your day.
+          </div>
+
+          <label for="typingInput">Type the passage above</label>
+          <textarea id="typingInput" rows="5" placeholder="Your typing test starts when you begin..." disabled></textarea>
+
+          <div class="button-row">
+            <button id="startTyping" class="primary-btn" type="button">Start 60-second test</button>
+            <button id="resetTyping" class="secondary-btn" type="button">Reset</button>
+          </div>
+          <p id="typingFeedback" class="feedback" aria-live="polite">Your text is used to calculate test statistics in this prototype.</p>
+        </article>
+      </section>
+
+      <!-- SPEECH LAB -->
+      <section id="speechPage" class="page hidden">
+        <div class="page-intro">
+          <span>🎙️</span>
+          <h2>The Speech Lab</h2>
+          <p>An optional recording activity for exploring speech duration.</p>
+        </div>
+
+        <article class="panel speech-panel">
+          <div class="speech-art">🎧</div>
+          <h2>Your voice, your choice.</h2>
+          <p class="muted">Recording requires your permission. You can listen to your recording before deciding whether to keep it.</p>
+
+          <label class="consent-row">
+            <input id="speechConsent" type="checkbox">
+            I understand and agree to use my microphone for this recording.
+          </label>
+
+          <div class="button-row centered">
+            <button id="startRecording" class="primary-btn" type="button">● Start recording</button>
+            <button id="stopRecording" class="secondary-btn" type="button" disabled>Stop recording</button>
+          </div>
+
+          <p id="speechStatus" class="feedback" aria-live="polite">No recording started.</p>
+          <p id="speechDuration" class="muted"></p>
+          <audio id="speechPlayback" controls class="hidden"></audio>
+
+          <p class="tiny-note">This prototype does not analyse emotions or diagnose any condition from your voice.</p>
+        </article>
+      </section>
+
+      <!-- AI INSIGHTS -->
+      <section id="insightsPage" class="page hidden">
+        <div class="page-intro">
+          <span>✨</span>
+          <h2>Your gentle insights</h2>
+          <p>Examples of the kind of observations the completed system may offer.</p>
+        </div>
+
+        <div class="insights-grid">
+          <article class="insight-card lilac">
+            <span>🌙</span>
+            <h3>Rest and routine</h3>
+            <p>Notice how your sleep routine relates to how you feel the following day. Look for patterns over time.</p>
+            <small>Example insight · Not a diagnosis</small>
+          </article>
+          <article class="insight-card peach">
+            <span>📱</span>
+            <h3>Mindful screen time</h3>
+            <p>Try recording your screen time for a few days before deciding whether you want to make a change.</p>
+            <small>Example insight · Not a diagnosis</small>
+          </article>
+          <article class="insight-card mint">
+            <span>⌨️</span>
+            <h3>Typing patterns</h3>
+            <p>Compare typing speed and accuracy across practice sessions. One session does not tell the whole story.</p>
+            <small>Example insight · Not a diagnosis</small>
+          </article>
+          <article class="insight-card pink">
+            <span>💗</span>
+            <h3>Check in with yourself</h3>
+            <p>Mood check-ins can help you reflect on your day. Your feelings are personal and deserve care.</p>
+            <small>Example insight · Not a diagnosis</small>
+          </article>
+        </div>
+
+        <article class="panel">
+          <h2>How the AI component will work</h2>
+          <p class="muted">The completed project can use recorded activity features and machine-learning methods to explore patterns. These examples are currently static and do not represent actual AI predictions.</p>
+        </article>
+      </section>
+
+      <!-- PROGRESS -->
+      <section id="progressPage" class="page hidden">
+        <div class="page-intro">
+          <span>🌻</span>
+          <h2>Your progress garden</h2>
+          <p>Review the entries and typing sessions recorded during this visit.</p>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card lilac">
+            <span class="stat-icon">🗓️</span>
+            <p>Activity entries</p>
+            <h3 id="progressEntries">0</h3>
+            <span>Entries recorded</span>
+          </article>
+          <article class="stat-card mint">
+            <span class="stat-icon">⌨️</span>
+            <p>Typing tests</p>
+            <h3 id="progressTests">0</h3>
+            <span>Tests completed</span>
+          </article>
+          <article class="stat-card peach">
+            <span class="stat-icon">⚡</span>
+            <p>Latest WPM</p>
+            <h3 id="progressWpm">0</h3>
+            <span>Words per minute</span>
+          </article>
+        </div>
+
+        <article class="panel">
+          <h2>Recent activity</h2>
+          <div id="progressHistory" class="history-list">
+            <p class="muted">Your activity will appear here as you use the prototype.</p>
+          </div>
+        </article>
+
+        <p class="tiny-note">This frontend prototype stores history temporarily in browser memory. Refreshing the page clears it.</p>
+      </section>
+
+      <footer class="footer">
+        <span>Bloomwell ✿</span>
+        <span>Grow at your own pace.</span>
+      </footer>
+
+    </main>
+  </div>
+
+  <script src="static/script.js"></script>
+</body>
+</html>
