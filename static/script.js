@@ -1,4 +1,10 @@
+const SUPABASE_URL = "YOUR_PROJECT_URL";
+const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
 
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const $ = (id) => document.getElementById(id);
 
 const state = {
@@ -104,27 +110,65 @@ $("authSwitch").addEventListener("click", () => {
   updateAuthForm();
 });
 
-$("authForm").addEventListener("submit", (event) => {
+$("authForm").addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
   const name = $("authName").value.trim();
 
-  if (!email || !$("authPassword").value) return;
+  try {
+    if (state.authMode === "signup") {
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name }
+        }
+      });
 
-  state.user = {
-    name: state.authMode === "signup"
-      ? name
-      : (name || email.split("@")[0] || "Friend")
-  };
+      if (error) throw error;
 
-  $("profileName").textContent = state.user.name;
-  $("authPassword").value = "";
+      if (!data.session) {
+        alert("Account created! Check your email to confirm it, then log in.");
+        state.authMode = "login";
+        updateAuthForm();
+        return;
+      }
 
-  showPage("dashboard");
+      state.user = {
+        name: data.user.user_metadata?.name || name
+      };
+    } else {
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+
+      state.user = {
+        name: data.user.user_metadata?.name || email.split("@")[0]
+      };
+    }
+
+    $("profileName").textContent = state.user.name;
+    $("authPassword").value = "";
+    showPage("dashboard");
+  } catch (error) {
+    alert(error.message);
+  }
 });
 
-$("logoutBtn").addEventListener("click", () => {
+$("logoutBtn").addEventListener("click", async () => {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
   state.user = null;
   showAuth();
 });
@@ -499,7 +543,27 @@ $("todayDate").textContent = new Date().toLocaleDateString("en-IN", {
 });
 
 updateAuthForm();
-showAuth();
+(async () => {
+  const { data: { session }, error } =
+    await supabaseClient.auth.getSession();
+
+  if (error) {
+    showAuth();
+    return;
+  }
+
+  if (session) {
+    state.user = {
+      name: session.user.user_metadata?.name ||
+            session.user.email.split("@")[0]
+    };
+
+    $("profileName").textContent = state.user.name;
+    showPage("dashboard");
+  } else {
+    showAuth();
+  }
+})();;
 resetTypingTest();
 renderActivities();
 renderProgress();
