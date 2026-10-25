@@ -1,6 +1,6 @@
 // Local development: run the Flask backend at http://127.0.0.1:5000.
 // When the backend is deployed, replace API_BASE with its HTTPS address.
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://bloomwell-backend-egdh.onrender.com";
 const $ = (id) => document.getElementById(id);
 
 async function apiRequest(path, options = {}) {
