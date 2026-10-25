@@ -1,11 +1,26 @@
-const SUPABASE_URL = "https://pocdumrdpajsnoshapip.supabase.co";
-const SUPABASE_KEY = "sb_publishable_u8MMbtvvmn4zESozY050Fg_bYvRI-xc";
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+// Local development: run the Flask backend at http://127.0.0.1:5000.
+// When the backend is deployed, replace API_BASE with its HTTPS address.
+const API_BASE = "http://127.0.0.1:5000";
 const $ = (id) => document.getElementById(id);
+
+async function apiRequest(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (options.body && !(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+    credentials: "include"
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || `Request failed (${response.status})`);
+  }
+  return payload;
+}
 
 const state = {
   user: null,
@@ -119,42 +134,27 @@ $("authForm").addEventListener("submit", async (event) => {
 
   try {
     if (state.authMode === "signup") {
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name }
-        }
+      await apiRequest("/signup", {
+        method: "POST",
+        body: JSON.stringify({ name, email, password })
       });
 
-      if (error) throw error;
-
-      if (!data.session) {
-        alert("Account created! Check your email to confirm it, then log in.");
-        state.authMode = "login";
-        updateAuthForm();
-        return;
-      }
-
-      state.user = {
-        name: data.user.user_metadata?.name || name
-      };
-    } else {
-      const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      if (error) throw error;
-
-      state.user = {
-        name: data.user.user_metadata?.name || email.split("@")[0]
-      };
+      alert("Account created! Please log in with your email and password.");
+      state.authMode = "login";
+      $("authPassword").value = "";
+      updateAuthForm();
+      return;
     }
 
+    const result = await apiRequest("/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+
+    state.user = result.user;
     $("profileName").textContent = state.user.name;
     $("authPassword").value = "";
+    await loadUserData();
     showPage("dashboard");
   } catch (error) {
     alert(error.message);
@@ -162,14 +162,18 @@ $("authForm").addEventListener("submit", async (event) => {
 });
 
 $("logoutBtn").addEventListener("click", async () => {
-  const { error } = await supabaseClient.auth.signOut();
-
-  if (error) {
-    alert(error.message);
+  try {
+    await apiRequest("/logout", { method: "POST" });
+  } catch (error) {
+    alert("Could not log out from the server: " + error.message);
     return;
   }
 
   state.user = null;
+  state.activities = [];
+  state.typingTests = [];
+  state.mood = "";
+  state.lastWpm = 0;
   showAuth();
 });
 
@@ -189,7 +193,7 @@ document.querySelectorAll("[data-page]").forEach((button) => {
 
 // Mood check-in
 document.querySelectorAll(".mood-btn").forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     state.mood = button.dataset.mood;
 
     document.querySelectorAll(".mood-btn").forEach((item) => {
@@ -199,13 +203,23 @@ document.querySelectorAll(".mood-btn").forEach((button) => {
     $("dashMood").textContent = state.mood;
     $("moodMessage").textContent =
       "Mood recorded for this visit: " + state.mood + ". Be kind to yourself. ♡";
+
+    try {
+      await apiRequest("/api/mood", {
+        method: "POST",
+        body: JSON.stringify({ mood: state.mood, notes: "" })
+      });
+    } catch (error) {
+      $("moodMessage").textContent =
+        "Mood shown for this visit, but could not be saved: " + error.message;
+    }
   });
 });
 
 // Daily activity tracker
 $("activityDate").value = todayString();
 
-$("activityForm").addEventListener("submit", (event) => {
+$("activityForm").addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const date = $("activityDate").value;
@@ -224,24 +238,25 @@ $("activityForm").addEventListener("submit", (event) => {
     return;
   }
 
-  state.activities.unshift({
-    date,
-    screen,
-    sleep,
-    social,
-    notes
-  });
+  try {
+    await apiRequest("/api/activity", {
+      method: "POST",
+      body: JSON.stringify({ date, screen, sleep, social, notes })
+    });
 
-  $("dashScreen").textContent = formatHours(screen);
-  $("dashSleep").textContent = formatHours(sleep);
+    state.activities.unshift({ date, screen, sleep, social, notes });
+    $("dashScreen").textContent = formatHours(screen);
+    $("dashSleep").textContent = formatHours(sleep);
 
-  $("activityForm").reset();
-  $("activityDate").value = todayString();
+    $("activityForm").reset();
+    $("activityDate").value = todayString();
 
-  renderActivities();
-  renderProgress();
-
-  alert("Your activity entry has been added! 🌱");
+    renderActivities();
+    renderProgress();
+    alert("Your activity entry has been saved! 🌱");
+  } catch (error) {
+    alert("Activity could not be saved. Please make sure you're logged in and the Flask backend is running. " + error.message);
+  }
 });
 
 function formatHours(hours) {
@@ -387,12 +402,17 @@ function finishTypingTest() {
   state.lastWpm = Number($("typingWpm").textContent) || 0;
   typingFinishedText = $("typingInput").value;
 
-  state.typingTests.unshift({
+  const accuracyValue = Number(
+    $("typingAccuracy").textContent.replace("%", "")
+  );
+
+  const testRecord = {
     wpm: state.lastWpm,
-    accuracy: $("typingAccuracy").textContent,
+    accuracy: accuracyValue + "%",
     characters: typingFinishedText.length,
     date: todayString()
-  });
+  };
+  state.typingTests.unshift(testRecord);
 
   $("dashWpm").textContent = state.lastWpm + " WPM";
   $("typingFeedback").textContent =
@@ -400,6 +420,19 @@ function finishTypingTest() {
     " characters typed. Keep practising at your own pace. 🌷";
 
   renderProgress();
+
+  apiRequest("/api/typing", {
+    method: "POST",
+    body: JSON.stringify({
+      wpm: state.lastWpm,
+      accuracy: accuracyValue,
+      characters: typingFinishedText.length,
+      date: todayString()
+    })
+  }).catch((error) => {
+    $("typingFeedback").textContent +=
+      " (This result could not be saved: " + error.message + ")";
+  });
 }
 
 $("startTyping").addEventListener("click", startTypingTest);
@@ -535,6 +568,55 @@ function renderProgress() {
   });
 }
 
+async function loadUserData() {
+  const [activityData, typingData, moodData] = await Promise.all([
+    apiRequest("/api/activity"),
+    apiRequest("/api/typing"),
+    apiRequest("/api/mood")
+  ]);
+
+  state.activities = activityData.activities || [];
+  state.typingTests = (typingData.tests || []).map((item) => ({
+    ...item,
+    accuracy: Number(item.accuracy) + "%",
+    characters: item.characters || 0
+  }));
+
+  if (moodData.mood) {
+    state.mood = moodData.mood;
+    $("dashMood").textContent = state.mood;
+    document.querySelectorAll(".mood-btn").forEach((button) => {
+      button.classList.toggle("selected", button.dataset.mood === state.mood);
+    });
+  }
+
+  if (state.activities.length) {
+    $("dashScreen").textContent = formatHours(state.activities[0].screen);
+    $("dashSleep").textContent = formatHours(state.activities[0].sleep);
+  }
+
+  if (state.typingTests.length) {
+    state.lastWpm = Number(state.typingTests[0].wpm) || 0;
+    $("dashWpm").textContent = state.lastWpm + " WPM";
+  }
+
+  renderActivities();
+  renderProgress();
+}
+
+async function restoreLogin() {
+  try {
+    const result = await apiRequest("/api/me");
+    state.user = result.user;
+    $("profileName").textContent = state.user.name;
+    await loadUserData();
+    showPage("dashboard");
+  } catch (_error) {
+    state.user = null;
+    showAuth();
+  }
+}
+
 // Initial setup
 $("todayDate").textContent = new Date().toLocaleDateString("en-IN", {
   day: "numeric",
@@ -543,27 +625,7 @@ $("todayDate").textContent = new Date().toLocaleDateString("en-IN", {
 });
 
 updateAuthForm();
-(async () => {
-  const { data: { session }, error } =
-    await supabaseClient.auth.getSession();
-
-  if (error) {
-    showAuth();
-    return;
-  }
-
-  if (session) {
-    state.user = {
-      name: session.user.user_metadata?.name ||
-            session.user.email.split("@")[0]
-    };
-
-    $("profileName").textContent = state.user.name;
-    showPage("dashboard");
-  } else {
-    showAuth();
-  }
-})();;
 resetTypingTest();
 renderActivities();
 renderProgress();
+restoreLogin();
